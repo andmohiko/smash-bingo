@@ -51,20 +51,42 @@ export const useFighterExtraction = () => {
     Array<Fighter>
   >([])
   const [excludeFighters, setExcludeFighters] = useState<Array<Fighter>>([])
-
   /**
    * ランダムに25個のファイターを抽出する
    * @param fighters - ファイターデータ
    */
   const extractFighters = (fighters: FightersData) => {
-    const fightersArray = Object.values(fighters) as Array<Fighter>
-    const randomFighters = getRandomElements(
-      fightersArray,
-      25,
-      mustIncludeFighters,
-      excludeFighters,
+    const bingoCardSize = 5 * 5
+    let fighterPool = Object.values(fighters) as Array<Fighter>
+    const selectedFightersArray: Array<Fighter> = []
+
+    // 必ず含めるファイターを追加
+    mustIncludeFighters.forEach((fighter) => {
+      selectedFightersArray.push(fighter)
+    })
+    // すべてのファイターから選択済みのファイターを除外したプールを作成する
+    fighterPool = fighterPool.filter(
+      (fighter) => !selectedFightersArray.includes(fighter),
     )
-    setSelectedFighters(randomFighters)
+    // 除外するファイターを除外したプールを作成する
+    fighterPool = fighterPool.filter(
+      (fighter) => !excludeFighters.includes(fighter),
+    )
+
+    // 抽出するファイターの数を計算する
+    const extractFightersCount = bingoCardSize - selectedFightersArray.length
+
+    // 抽出するファイターをランダムに選択する
+    const extractedFighters = getRandomElements(
+      fighterPool,
+      extractFightersCount,
+    )
+    // 選択済みのファイターと抽出したファイターを結合し、シャッフルする
+    const combinedFighters = [...selectedFightersArray, ...extractedFighters]
+    const shuffledFighters = combinedFighters.sort(() => 0.5 - Math.random())
+
+    // シャッフルしたファイターを選択済みのファイターとして設定する
+    setSelectedFighters(shuffledFighters)
   }
 
   /**
