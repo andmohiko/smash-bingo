@@ -3,17 +3,16 @@
  * @description ファイターのビンゴカードを表示するコンポーネント
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { BingoCardDisplay } from './BingoCardDisplay'
 import { BingoCardForm } from './BingoCardForm'
 
-import type { FightersData } from '~/features/bingo/types/fighter'
-
 import { useFighterExtraction } from '~/features/bingo/hooks/useFighterExtraction'
+import { useFighters } from '~/features/bingo/hooks/useFighters'
 
 export const BingoCard = (): React.ReactNode => {
-  const [fighters, setFighters] = useState<FightersData | null>(null)
+  const { fighters, error, isLoading } = useFighters()
   const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
   const {
     selectedFighters,
@@ -27,23 +26,6 @@ export const BingoCard = (): React.ReactNode => {
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
   } = useFighterExtraction()
-
-  useEffect(() => {
-    const fetchFighters = async () => {
-      try {
-        const response = await fetch('/fighters/fighters.json')
-        if (!response.ok) {
-          throw new Error('ファイターデータの取得に失敗しました')
-        }
-        const data = await response.json()
-        setFighters(data)
-      } catch (error) {
-        console.error('エラーが発生しました:', error)
-      }
-    }
-
-    fetchFighters()
-  }, [])
 
   /**
    * ランダムに25個のファイターを抽出する
@@ -70,8 +52,16 @@ export const BingoCard = (): React.ReactNode => {
     })
   }
 
-  if (!fighters) {
+  if (isLoading) {
     return <div>読み込み中...</div>
+  }
+
+  if (error) {
+    return <div>エラーが発生しました: {error.message}</div>
+  }
+
+  if (!fighters) {
+    return <div>ファイターデータが見つかりません</div>
   }
 
   return (
