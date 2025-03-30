@@ -7,6 +7,7 @@ import { useState } from 'react'
 
 import { BingoCardDisplay } from './BingoCardDisplay'
 import { BingoCardForm } from './BingoCardForm'
+import { ConfirmModal } from './ConfirmModal'
 
 import { useFighterExtraction } from '~/features/bingo/hooks/useFighterExtraction'
 import { useFighters } from '~/features/bingo/hooks/useFighters'
@@ -14,6 +15,7 @@ import { useFighters } from '~/features/bingo/hooks/useFighters'
 export const BingoCard = (): React.ReactNode => {
   const { fighters, error, isLoading } = useFighters()
   const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const {
     selectedFighters,
     mustIncludeFighters,
@@ -28,12 +30,24 @@ export const BingoCard = (): React.ReactNode => {
   } = useFighterExtraction()
 
   /**
+   * 抽出ボタンのクリックハンドラー
+   */
+  const handleExtractClick = () => {
+    if (selectedFighters.length > 0) {
+      setIsConfirmModalOpen(true)
+    } else {
+      handleExtractFighters()
+    }
+  }
+
+  /**
    * ランダムに25個のファイターを抽出する
    */
   const handleExtractFighters = () => {
     if (!fighters) return
     extractFighters(fighters)
     setActiveFighters(new Set()) // アクティブ状態をリセット
+    setIsConfirmModalOpen(false)
   }
 
   /**
@@ -74,7 +88,7 @@ export const BingoCard = (): React.ReactNode => {
           excludeFighters={excludeFighters}
           isExcludeDashFighters={isExcludeDashFighters}
           isExcludeDlcFighters={isExcludeDlcFighters}
-          onExtract={handleExtractFighters}
+          onExtract={handleExtractClick}
           addFighter={addFighter}
           removeFighter={removeFighter}
           toggleDashFighterExclusion={toggleDashFighterExclusion}
@@ -85,6 +99,12 @@ export const BingoCard = (): React.ReactNode => {
           selectedFighters={selectedFighters}
           activeFighters={activeFighters}
           onFighterClick={handleFighterClick}
+        />
+
+        <ConfirmModal
+          isOpen={isConfirmModalOpen}
+          onConfirm={handleExtractFighters}
+          onCancel={() => setIsConfirmModalOpen(false)}
         />
       </div>
     </div>

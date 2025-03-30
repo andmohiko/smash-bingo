@@ -7,6 +7,7 @@ import { FighterSelector } from './FighterSelector'
 
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
+import { BasicButton } from '~/components/Buttons/BasicButton'
 import { Checkbox } from '~/components/Inputs/Checkbox'
 
 type Props = {
@@ -89,12 +90,7 @@ export const BingoCardForm = ({
         />
       </div>
 
-      <button
-        onClick={onExtract}
-        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-      >
-        25個のファイターを抽出
-      </button>
+      <BasicButton onClick={onExtract}>ビンゴカードを生成する</BasicButton>
     </div>
   )
 }
