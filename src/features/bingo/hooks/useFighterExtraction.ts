@@ -8,37 +8,28 @@ import { useState } from 'react'
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
 /**
+ * 配列をシャッフルする
+ * @param array - 対象の配列
+ * @returns シャッフルされた配列
+ */
+const shuffleArray = <T extends object>(array: Array<T>): Array<T> => {
+  return [...array].sort(() => 0.5 - Math.random())
+}
+
+/**
  * 配列からランダムに指定数の要素を抽出する
  * @param array - 対象の配列
  * @param count - 抽出する要素の数
- * @param mustInclude - 必ず含める要素の配列
- * @param exclude - 除外する要素の配列
  * @returns ランダムに抽出された要素の配列
  */
 const getRandomElements = <T extends object>(
   array: Array<T>,
   count: number,
-  mustInclude: Array<T> = [],
-  exclude: Array<T> = [],
 ): Array<T> => {
-  // 必ず含める要素と除外する要素を除外した配列を作成
-  const remainingArray = array.filter(
-    (item) =>
-      !mustInclude.some((include) => include === item) &&
-      !exclude.some((exclude) => exclude === item),
-  )
-
-  // 残りの要素をランダムに並び替え
-  const shuffled = [...remainingArray].sort(() => 0.5 - Math.random())
-
-  // 必ず含める要素をランダムな位置に挿入
-  const result = [...shuffled.slice(0, count - mustInclude.length)]
-  mustInclude.forEach((item) => {
-    const insertIndex = Math.floor(Math.random() * (result.length + 1))
-    result.splice(insertIndex, 0, item)
-  })
-
-  return result
+  // 要素をランダムに並び替え
+  const shuffled = shuffleArray(array)
+  // 先頭からcount個の要素を抽出
+  return shuffled.slice(0, count)
 }
 
 /**
@@ -51,6 +42,9 @@ export const useFighterExtraction = () => {
     Array<Fighter>
   >([])
   const [excludeFighters, setExcludeFighters] = useState<Array<Fighter>>([])
+  const [isExcludeDashFighters, setIsExcludeDashFighters] =
+    useState<boolean>(false)
+
   /**
    * ランダムに25個のファイターを抽出する
    * @param fighters - ファイターデータ
@@ -73,6 +67,28 @@ export const useFighterExtraction = () => {
       (fighter) => !excludeFighters.includes(fighter),
     )
 
+    // ダッシュファイターを除外する場合
+    if (isExcludeDashFighters) {
+      // fighterPoolの中からselectedFightersArrayと同じnumberのファイターを除外する
+      selectedFightersArray.forEach((selectedFighter) => {
+        if (selectedFighter.hasDashFighter) {
+          fighterPool = fighterPool.filter(
+            (fighter) => fighter.number !== selectedFighter.number,
+          )
+        }
+      })
+      // fighterPoolをシャッフルし、fighterPoolの中に同じnumberのファイターがいれば前者を除外する
+      const processedNumbers: Set<number> = new Set()
+      fighterPool = shuffleArray(fighterPool)
+      fighterPool = fighterPool.filter((fighter) => {
+        if (processedNumbers.has(fighter.number)) {
+          return false
+        }
+        processedNumbers.add(fighter.number)
+        return true
+      })
+    }
+
     // 抽出するファイターの数を計算する
     const extractFightersCount = bingoCardSize - selectedFightersArray.length
 
@@ -83,7 +99,7 @@ export const useFighterExtraction = () => {
     )
     // 選択済みのファイターと抽出したファイターを結合し、シャッフルする
     const combinedFighters = [...selectedFightersArray, ...extractedFighters]
-    const shuffledFighters = combinedFighters.sort(() => 0.5 - Math.random())
+    const shuffledFighters = shuffleArray(combinedFighters)
 
     // シャッフルしたファイターを選択済みのファイターとして設定する
     setSelectedFighters(shuffledFighters)
@@ -116,12 +132,21 @@ export const useFighterExtraction = () => {
     setState((prev) => prev.filter((f) => f.fighterId !== fighterId))
   }
 
+  /**
+   * ダッシュファイターを除外するかどうかを切り替える
+   */
+  const toggleDashFighterExclusion = () => {
+    setIsExcludeDashFighters((prev) => !prev)
+  }
+
   return {
     selectedFighters,
     mustIncludeFighters,
     excludeFighters,
+    isExcludeDashFighters,
     extractFighters,
     addFighter,
     removeFighter,
+    toggleDashFighterExclusion,
   }
 }

@@ -10,12 +10,15 @@ export type Fighter = {
   fighterId: string
   icon: string
   isDashFighter: boolean
+  hasDashFighter: boolean
+  hasSiblingFighter: boolean
   name: string
   nickname: string
   name_en: string
   number: number
   parent: string | null
   child: string | null
+  isDlc: boolean
 }
 
 /**

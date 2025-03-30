@@ -83,9 +83,11 @@ export const BingoCard = (): React.ReactNode => {
     selectedFighters,
     mustIncludeFighters,
     excludeFighters,
+    isExcludeDashFighters,
     extractFighters,
     addFighter,
     removeFighter,
+    toggleDashFighterExclusion,
   } = useFighterExtraction()
 
   useEffect(() => {
@@ -135,6 +137,13 @@ export const BingoCard = (): React.ReactNode => {
   }
 
   const fightersArray = Object.values(fighters)
+  const selectedFightersNumbers = selectedFighters
+    .map((fighter) => fighter.number)
+    .sort((a, b) => a - b)
+  // selectedFightersNumbersから重複した要素だけを抽出
+  const duplicatedNumbers = selectedFightersNumbers.filter(
+    (number, index, self) => self.indexOf(number) !== index,
+  )
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -229,6 +238,23 @@ export const BingoCard = (): React.ReactNode => {
               </select>
             </div>
           </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="excludeDashFighters"
+                checked={isExcludeDashFighters}
+                onChange={toggleDashFighterExclusion}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="excludeDashFighters"
+                className="text-sm text-gray-700 cursor-pointer"
+              >
+                ダッシュファイターを除外する
+              </label>
+            </div>
+          </div>
           <button
             onClick={handleExtractFighters}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -248,6 +274,8 @@ export const BingoCard = (): React.ReactNode => {
             ))}
           </div>
         )}
+        <p>{selectedFightersNumbers.join(',')}</p>
+        <p>{duplicatedNumbers.join(',')}</p>
       </div>
     </div>
   )
