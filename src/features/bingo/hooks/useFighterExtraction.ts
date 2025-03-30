@@ -44,6 +44,8 @@ export const useFighterExtraction = () => {
   const [excludeFighters, setExcludeFighters] = useState<Array<Fighter>>([])
   const [isExcludeDashFighters, setIsExcludeDashFighters] =
     useState<boolean>(false)
+  const [isExcludeDlcFighters, setIsExcludeDlcFighters] =
+    useState<boolean>(false)
 
   /**
    * ランダムに25個のファイターを抽出する
@@ -66,6 +68,11 @@ export const useFighterExtraction = () => {
     fighterPool = fighterPool.filter(
       (fighter) => !excludeFighters.includes(fighter),
     )
+
+    // DLCファイターを除外する場合
+    if (isExcludeDlcFighters) {
+      fighterPool = fighterPool.filter((fighter) => !fighter.isDlc)
+    }
 
     // ダッシュファイターを除外する場合
     if (isExcludeDashFighters) {
@@ -139,14 +146,23 @@ export const useFighterExtraction = () => {
     setIsExcludeDashFighters((prev) => !prev)
   }
 
+  /**
+   * DLCファイターを除外するかどうかを切り替える
+   */
+  const toggleDlcFighterExclusion = () => {
+    setIsExcludeDlcFighters((prev) => !prev)
+  }
+
   return {
     selectedFighters,
     mustIncludeFighters,
     excludeFighters,
     isExcludeDashFighters,
+    isExcludeDlcFighters,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
+    toggleDlcFighterExclusion,
   }
 }

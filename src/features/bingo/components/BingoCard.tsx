@@ -84,10 +84,12 @@ export const BingoCard = (): React.ReactNode => {
     mustIncludeFighters,
     excludeFighters,
     isExcludeDashFighters,
+    isExcludeDlcFighters,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
+    toggleDlcFighterExclusion,
   } = useFighterExtraction()
 
   useEffect(() => {
@@ -140,10 +142,12 @@ export const BingoCard = (): React.ReactNode => {
   const selectedFightersNumbers = selectedFighters
     .map((fighter) => fighter.number)
     .sort((a, b) => a - b)
-  // selectedFightersNumbersから重複した要素だけを抽出
   const duplicatedNumbers = selectedFightersNumbers.filter(
     (number, index, self) => self.indexOf(number) !== index,
   )
+  const dlcNumbers = selectedFighters
+    .filter((fighter) => fighter.isDlc)
+    .map((fighter) => fighter.number)
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -255,6 +259,23 @@ export const BingoCard = (): React.ReactNode => {
               </label>
             </div>
           </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isExcludeDlcFighters"
+                checked={isExcludeDlcFighters}
+                onChange={toggleDlcFighterExclusion}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="isExcludeDlcFighters"
+                className="text-sm text-gray-700 cursor-pointer"
+              >
+                DLCファイターを除外する
+              </label>
+            </div>
+          </div>
           <button
             onClick={handleExtractFighters}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -274,8 +295,9 @@ export const BingoCard = (): React.ReactNode => {
             ))}
           </div>
         )}
-        <p>{selectedFightersNumbers.join(',')}</p>
-        <p>{duplicatedNumbers.join(',')}</p>
+        <p>選択: {selectedFightersNumbers.join(',')}</p>
+        <p>重複: {duplicatedNumbers.join(',')}</p>
+        <p>DLC: {dlcNumbers.join(',')}</p>
       </div>
     </div>
   )
