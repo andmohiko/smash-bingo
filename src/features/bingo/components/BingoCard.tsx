@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react'
 
 import Image from 'next/image'
 
+import { BingoCardDisplay } from './BingoCardDisplay'
+
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
 import { useFighterExtraction } from '~/features/bingo/hooks/useFighterExtraction'
@@ -283,21 +285,11 @@ export const BingoCard = (): React.ReactNode => {
             25個のファイターを抽出
           </button>
         </div>
-        {selectedFighters.length > 0 && (
-          <div className="grid grid-cols-5 gap-2 max-w-md w-full">
-            {selectedFighters.map((fighter) => (
-              <FighterCard
-                key={fighter.fighterId}
-                fighter={fighter}
-                isActive={activeFighters.has(fighter.fighterId)}
-                onClick={() => handleFighterClick(fighter.fighterId)}
-              />
-            ))}
-          </div>
-        )}
-        <p>選択: {selectedFightersNumbers.join(',')}</p>
-        <p>重複: {duplicatedNumbers.join(',')}</p>
-        <p>DLC: {dlcNumbers.join(',')}</p>
+        <BingoCardDisplay
+          selectedFighters={selectedFighters}
+          activeFighters={activeFighters}
+          onFighterClick={handleFighterClick}
+        />
       </div>
     </div>
   )
