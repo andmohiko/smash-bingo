@@ -7,55 +7,9 @@ import { useEffect, useState } from 'react'
 
 import Image from 'next/image'
 
-interface Fighter {
-  fighterId: string
-  icon: string
-  isDashFighter: boolean
-  name: string
-  nickname: string
-  name_en: string
-  number: number
-  parent: string | null
-  child: string | null
-}
+import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
-interface FightersData {
-  [key: string]: Fighter
-}
-
-/**
- * 配列からランダムに指定数の要素を抽出する
- * @param array - 対象の配列
- * @param count - 抽出する要素の数
- * @param mustInclude - 必ず含める要素の配列
- * @param exclude - 除外する要素の配列
- * @returns ランダムに抽出された要素の配列
- */
-const getRandomElements = <T extends object>(
-  array: Array<T>,
-  count: number,
-  mustInclude: Array<T> = [],
-  exclude: Array<T> = [],
-): Array<T> => {
-  // 必ず含める要素と除外する要素を除外した配列を作成
-  const remainingArray = array.filter(
-    (item) =>
-      !mustInclude.some((include) => include === item) &&
-      !exclude.some((exclude) => exclude === item),
-  )
-
-  // 残りの要素をランダムに並び替え
-  const shuffled = [...remainingArray].sort(() => 0.5 - Math.random())
-
-  // 必ず含める要素をランダムな位置に挿入
-  const result = [...shuffled.slice(0, count - mustInclude.length)]
-  mustInclude.forEach((item) => {
-    const insertIndex = Math.floor(Math.random() * (result.length + 1))
-    result.splice(insertIndex, 0, item)
-  })
-
-  return result
-}
+import { useFighterExtraction } from '~/features/bingo/hooks/useFighterExtraction'
 
 /**
  * ファイターカードコンポーネント
@@ -124,12 +78,15 @@ const SelectedFighterTag = ({
 
 export const BingoCard = (): React.ReactNode => {
   const [fighters, setFighters] = useState<FightersData | null>(null)
-  const [selectedFighters, setSelectedFighters] = useState<Array<Fighter>>([])
   const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
-  const [mustIncludeFighters, setMustIncludeFighters] = useState<
-    Array<Fighter>
-  >([])
-  const [excludeFighters, setExcludeFighters] = useState<Array<Fighter>>([])
+  const {
+    selectedFighters,
+    mustIncludeFighters,
+    excludeFighters,
+    extractFighters,
+    addFighter,
+    removeFighter,
+  } = useFighterExtraction()
 
   useEffect(() => {
     const fetchFighters = async () => {
@@ -153,15 +110,7 @@ export const BingoCard = (): React.ReactNode => {
    */
   const handleExtractFighters = () => {
     if (!fighters) return
-
-    const fightersArray = Object.values(fighters) as Array<Fighter>
-    const randomFighters = getRandomElements(
-      fightersArray,
-      25,
-      mustIncludeFighters,
-      excludeFighters,
-    )
-    setSelectedFighters(randomFighters)
+    extractFighters(fighters)
     setActiveFighters(new Set()) // アクティブ状態をリセット
   }
 
@@ -181,36 +130,6 @@ export const BingoCard = (): React.ReactNode => {
     })
   }
 
-  /**
-   * ファイターを選択リストに追加する
-   * @param fighter - 追加するファイター
-   * @param type - 追加するタイプ（'include' | 'exclude'）
-   */
-  const handleAddFighter = (fighter: Fighter, type: 'include' | 'exclude') => {
-    const targetState =
-      type === 'include' ? mustIncludeFighters : excludeFighters
-    const setState =
-      type === 'include' ? setMustIncludeFighters : setExcludeFighters
-
-    if (!targetState.some((f) => f.fighterId === fighter.fighterId)) {
-      setState((prev) => [...prev, fighter])
-    }
-  }
-
-  /**
-   * ファイターを選択リストから削除する
-   * @param fighterId - 削除するファイターのID
-   * @param type - 削除するタイプ（'include' | 'exclude'）
-   */
-  const handleRemoveFighter = (
-    fighterId: string,
-    type: 'include' | 'exclude',
-  ) => {
-    const setState =
-      type === 'include' ? setMustIncludeFighters : setExcludeFighters
-    setState((prev) => prev.filter((f) => f.fighterId !== fighterId))
-  }
-
   if (!fighters) {
     return <div>読み込み中...</div>
   }
@@ -228,9 +147,7 @@ export const BingoCard = (): React.ReactNode => {
                 <SelectedFighterTag
                   key={fighter.fighterId}
                   fighter={fighter}
-                  onRemove={() =>
-                    handleRemoveFighter(fighter.fighterId, 'include')
-                  }
+                  onRemove={() => removeFighter(fighter.fighterId, 'include')}
                   variant="include"
                 />
               ))}
@@ -242,7 +159,7 @@ export const BingoCard = (): React.ReactNode => {
                     (f) => f.fighterId === e.target.value,
                   )
                   if (selected) {
-                    handleAddFighter(selected, 'include')
+                    addFighter(selected, 'include')
                     e.target.value = '' // セレクトボックスをリセット
                   }
                 }}
@@ -274,9 +191,7 @@ export const BingoCard = (): React.ReactNode => {
                 <SelectedFighterTag
                   key={fighter.fighterId}
                   fighter={fighter}
-                  onRemove={() =>
-                    handleRemoveFighter(fighter.fighterId, 'exclude')
-                  }
+                  onRemove={() => removeFighter(fighter.fighterId, 'exclude')}
                   variant="exclude"
                 />
               ))}
@@ -288,7 +203,7 @@ export const BingoCard = (): React.ReactNode => {
                     (f) => f.fighterId === e.target.value,
                   )
                   if (selected) {
-                    handleAddFighter(selected, 'exclude')
+                    addFighter(selected, 'exclude')
                     e.target.value = '' // セレクトボックスをリセット
                   }
                 }}
