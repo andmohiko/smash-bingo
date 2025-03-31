@@ -1,5 +1,7 @@
 import { ReactElement, ReactNode, useState } from 'react'
 
+import { BottomFooter } from './BottomFooter'
+
 import { FlexBox } from '~/components/Base/FlexBox'
 import { LoadingOverlay } from '~/components/Base/Loading'
 import { PageHead } from '~/components/Head'
@@ -26,6 +28,7 @@ export const DefaultLayout = ({ children }: Props): ReactElement => {
           {children}
         </FlexBox>
       </FlexBox>
+      <BottomFooter />
     </>
   )
 }
