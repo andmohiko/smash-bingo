@@ -6,11 +6,11 @@
 import { useState } from 'react'
 
 import { useFighters } from './useFighters'
-import { BingoState } from './useSerializeBingoState'
+import { useSerializeBingoState } from './useSerializeBingoState'
 
+import type { BingoState } from '~/features/bingo/types/bingo'
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
-import { SerializedBingoState } from '~/features/bingo/types/bingo'
 import { getRandomElements, shuffleArray } from '~/features/bingo/utils'
 
 /**
@@ -35,6 +35,8 @@ export const useBingoCard = () => {
     isLoading: isLoadingFighters,
     error: errorFighters,
   } = useFighters()
+  const { stateString, setStateString, serializeState, deserializeState } =
+    useSerializeBingoState()
   const [selectedFighters, setSelectedFighters] = useState<Array<Fighter>>([])
   const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
   const [mustIncludeFighters, setMustIncludeFighters] = useState<
@@ -45,8 +47,8 @@ export const useBingoCard = () => {
     useState<boolean>(false)
   const [isExcludeDlcFighters, setIsExcludeDlcFighters] =
     useState<boolean>(false)
-  const [stateString, setStateString] = useState<string>('')
   const [currentState, setCurrentState] = useState<BingoState | null>(null)
+  const [bingoStateError, setBingoStateError] = useState<string | null>(null)
 
   /**
    * ランダムに25個のファイターを抽出する
@@ -112,6 +114,17 @@ export const useBingoCard = () => {
     // シャッフルしたファイターを選択済みのファイターとして設定する
     setSelectedFighters(shuffledFighters)
     setActiveFighters(new Set()) // アクティブ状態をリセット
+
+    // 現在の状態を更新
+    const newState: BingoState = {
+      selectedFighters: shuffledFighters,
+      mustIncludeFighters,
+      excludeFighters,
+      isExcludeDashFighters,
+      isExcludeDlcFighters,
+      activeFighters: new Set(),
+    }
+    setCurrentState(newState)
   }
 
   /**
@@ -169,52 +182,65 @@ export const useBingoCard = () => {
       }
       return newSet
     })
+
+    // 現在の状態を更新
+    setCurrentState((prev) => {
+      if (!prev) return null
+      return {
+        ...prev,
+        activeFighters: new Set([...prev.activeFighters, fighterId]),
+      }
+    })
   }
 
   /**
-   * ビンゴカードの状態を文字列に変換する
+   * ビンゴカードの状態をシリアライズする
    */
-  const serializeState = (): string => {
-    if (!currentState) {
-      setStateString('')
-      return ''
+  const onSerializeState = () => {
+    // 現在の状態を作成
+    const state: BingoState = {
+      selectedFighters,
+      mustIncludeFighters,
+      excludeFighters,
+      isExcludeDashFighters,
+      isExcludeDlcFighters,
+      activeFighters,
     }
-    const state: SerializedBingoState = {
-      s: currentState.selectedFighters.map((f) => f.fighterId),
-      m: currentState.mustIncludeFighters.map((f) => f.fighterId),
-      e: currentState.excludeFighters.map((f) => f.fighterId),
-      d: currentState.isExcludeDashFighters,
-      l: currentState.isExcludeDlcFighters,
-      a: Array.from(currentState.activeFighters),
-    }
-    const serialized = btoa(JSON.stringify(state))
-    setStateString(serialized)
-    return serialized
+    // 現在の状態をシリアライズ
+    const serializedString = serializeState(state)
+    setStateString(serializedString)
+    setCurrentState(state)
+    return serializedString
   }
 
   /**
-   * 文字列からビンゴカードの状態を復元する
+   * ビンゴカードの状態を復元する
    */
-  const deserializeState = (
-    stateString: string,
-    fighters: FightersData,
-  ): BingoState => {
-    const state = JSON.parse(atob(stateString)) as SerializedBingoState
-    const fightersArray = Object.values(fighters) as Array<Fighter>
+  const onStateRestore = () => {
+    if (!stateString || !fighters) return
 
-    return {
-      selectedFighters: state.s.map(
-        (id) => fightersArray.find((f) => f.fighterId === id)!,
-      ),
-      mustIncludeFighters: state.m.map(
-        (id) => fightersArray.find((f) => f.fighterId === id)!,
-      ),
-      excludeFighters: state.e.map(
-        (id) => fightersArray.find((f) => f.fighterId === id)!,
-      ),
-      isExcludeDashFighters: state.d,
-      isExcludeDlcFighters: state.l,
-      activeFighters: new Set(state.a),
+    try {
+      // 状態を復元
+      const restoredState = deserializeState(stateString, fighters)
+
+      // 各状態を更新
+      setSelectedFighters(restoredState.selectedFighters)
+      setMustIncludeFighters(restoredState.mustIncludeFighters)
+      setExcludeFighters(restoredState.excludeFighters)
+
+      // 除外設定を更新
+      setIsExcludeDashFighters(restoredState.isExcludeDashFighters)
+      setIsExcludeDlcFighters(restoredState.isExcludeDlcFighters)
+
+      // アクティブな状態を更新
+      setActiveFighters(restoredState.activeFighters)
+
+      // 現在の状態を更新
+      setCurrentState(restoredState)
+      setBingoStateError(null)
+    } catch (error) {
+      setBingoStateError('ビンゴカードの状態の復元に失敗しました')
+      console.error('ビンゴカードの状態の復元に失敗しました:', error)
     }
   }
 
@@ -229,13 +255,16 @@ export const useBingoCard = () => {
     isExcludeDlcFighters,
     stateString,
     activeFighters,
+    currentState,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
     handleFighterClick,
-    serializeState,
-    deserializeState,
+    onSerializeState,
+    onStateRestore,
+    setStateString,
+    bingoStateError,
   }
 }

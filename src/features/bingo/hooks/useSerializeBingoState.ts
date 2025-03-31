@@ -1,44 +1,18 @@
 import { useState } from 'react'
 
-import { Fighter, FightersData } from '~/features/bingo/types/fighter'
+import type {
+  BingoState,
+  SerializedBingoState,
+} from '~/features/bingo/types/bingo'
+import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
-/**
- * シリアライズされたビンゴカードの状態を表す型
- */
-type SerializedBingoState = {
-  /** 選択されたファイターのID配列 */
-  s: Array<string>
-  /** 必ず含めるファイターのID配列 */
-  m: Array<string>
-  /** 除外するファイターのID配列 */
-  e: Array<string>
-  /** ダッシュファイターを除外するかどうか */
-  d: boolean
-  /** DLCファイターを除外するかどうか */
-  l: boolean
-  /** アクティブなファイターのID配列 */
-  a: Array<string>
-}
-
-/**
- * ビンゴカードの状態を表す型
- */
-export type BingoState = {
-  selectedFighters: Array<Fighter>
-  mustIncludeFighters: Array<Fighter>
-  excludeFighters: Array<Fighter>
-  isExcludeDashFighters: boolean
-  isExcludeDlcFighters: boolean
-  activeFighters: Set<string>
-}
-
-export const useSerializeBingoState = (currentState: BingoState) => {
+export const useSerializeBingoState = () => {
   const [stateString, setStateString] = useState<string>('')
 
   /**
    * ビンゴカードの状態を文字列に変換する
    */
-  const serializeState = (): string => {
+  const serializeState = (currentState: BingoState): string => {
     const state: SerializedBingoState = {
       s: currentState.selectedFighters.map((f) => f.fighterId),
       m: currentState.mustIncludeFighters.map((f) => f.fighterId),
@@ -59,27 +33,33 @@ export const useSerializeBingoState = (currentState: BingoState) => {
     stateString: string,
     fighters: FightersData,
   ): BingoState => {
-    const state = JSON.parse(atob(stateString)) as SerializedBingoState
-    const fightersArray = Object.values(fighters) as Array<Fighter>
+    try {
+      const state = JSON.parse(atob(stateString)) as SerializedBingoState
+      const fightersArray = Object.values(fighters) as Array<Fighter>
 
-    return {
-      selectedFighters: state.s.map(
-        (id) => fightersArray.find((f) => f.fighterId === id)!,
-      ),
-      mustIncludeFighters: state.m.map(
-        (id) => fightersArray.find((f) => f.fighterId === id)!,
-      ),
-      excludeFighters: state.e.map(
-        (id) => fightersArray.find((f) => f.fighterId === id)!,
-      ),
-      isExcludeDashFighters: state.d,
-      isExcludeDlcFighters: state.l,
-      activeFighters: new Set(state.a),
+      return {
+        selectedFighters: state.s.map(
+          (id) => fightersArray.find((f) => f.fighterId === id)!,
+        ),
+        mustIncludeFighters: state.m.map(
+          (id) => fightersArray.find((f) => f.fighterId === id)!,
+        ),
+        excludeFighters: state.e.map(
+          (id) => fightersArray.find((f) => f.fighterId === id)!,
+        ),
+        isExcludeDashFighters: state.d,
+        isExcludeDlcFighters: state.l,
+        activeFighters: new Set(state.a),
+      }
+    } catch (error) {
+      console.error('状態の復元に失敗しました:', error)
+      throw error
     }
   }
 
   return {
     stateString,
+    setStateString,
     serializeState,
     deserializeState,
   }

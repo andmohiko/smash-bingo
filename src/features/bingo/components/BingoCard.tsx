@@ -12,7 +12,6 @@ import { ConfirmModal } from './ConfirmModal'
 
 import { BasicButton } from '~/components/Buttons/BasicButton'
 import { useBingoCard } from '~/features/bingo/hooks/useBingoCard'
-import { BingoState } from '~/features/bingo/hooks/useSerializeBingoState'
 
 export const BingoCard = (): React.ReactNode => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
@@ -27,12 +26,17 @@ export const BingoCard = (): React.ReactNode => {
     isExcludeDashFighters,
     isExcludeDlcFighters,
     activeFighters,
+    stateString,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
     handleFighterClick,
+    setStateString,
+    onSerializeState,
+    onStateRestore,
+    bingoStateError,
   } = useBingoCard()
 
   /**
@@ -55,49 +59,6 @@ export const BingoCard = (): React.ReactNode => {
     setIsConfirmModalOpen(false)
   }
 
-  // /**
-  //  * 状態を復元するハンドラー
-  //  */
-  // const handleStateRestore = (state: BingoState) => {
-  //   if (!fighters) return
-
-  //   // 除外設定を初期状態に戻す
-  //   if (isExcludeDashFighters !== false) {
-  //     toggleDashFighterExclusion()
-  //   }
-  //   if (isExcludeDlcFighters !== false) {
-  //     toggleDlcFighterExclusion()
-  //   }
-
-  //   // 必須ファイターと除外ファイターをクリア
-  //   mustIncludeFighters.forEach((fighter) =>
-  //     removeFighter(fighter.fighterId, 'include'),
-  //   )
-  //   excludeFighters.forEach((fighter) =>
-  //     removeFighter(fighter.fighterId, 'exclude'),
-  //   )
-
-  //   // 新しい状態を設定
-  //   state.mustIncludeFighters.forEach((fighter) =>
-  //     addFighter(fighter, 'include'),
-  //   )
-  //   state.excludeFighters.forEach((fighter) => addFighter(fighter, 'exclude'))
-
-  //   // 除外設定を復元
-  //   if (state.isExcludeDashFighters) {
-  //     toggleDashFighterExclusion()
-  //   }
-  //   if (state.isExcludeDlcFighters) {
-  //     toggleDlcFighterExclusion()
-  //   }
-
-  //   // 選択されたファイターを設定
-  //   extractFighters(fighters, state.selectedFighters)
-
-  //   // アクティブな状態を更新
-  //   setActiveFighters(state.activeFighters)
-  // }
-
   if (isLoadingFighters) {
     return <div>読み込み中...</div>
   }
@@ -113,7 +74,7 @@ export const BingoCard = (): React.ReactNode => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-center">ビンゴカード</h1>
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-8">
         <div className="flex gap-4">
           <BasicButton
             onClick={() => setIsSettingsModalOpen(true)}
@@ -132,18 +93,13 @@ export const BingoCard = (): React.ReactNode => {
           onFighterClick={handleFighterClick}
         />
 
-        {/* <BingoStateManager
-          currentState={{
-            selectedFighters,
-            mustIncludeFighters,
-            excludeFighters,
-            isExcludeDashFighters,
-            isExcludeDlcFighters,
-            activeFighters,
-          }}
-          onStateRestore={handleStateRestore}
-          fighters={fighters}
-        /> */}
+        <BingoStateManager
+          stateString={stateString}
+          onChangeStateString={setStateString}
+          onSerializeState={onSerializeState}
+          onStateRestore={onStateRestore}
+          bingoStateError={bingoStateError}
+        />
 
         <BingoSettingsModal
           isOpen={isSettingsModalOpen}
