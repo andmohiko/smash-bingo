@@ -15,12 +15,18 @@ export const PageHead = (): React.ReactElement => (
     <link rel="canonical" href="https://bingo.smarepo.me/" />
 
     {/* OGP */}
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="summary" />
     <meta property="og:url" content="https://bingo.smarepo.me/" />
     <meta property="og:title" content="スマンゴ - スマブラビンゴツール" />
     <meta
       property="og:description"
       content="スマブラのビンゴカードを作成するサイトです。"
     />
+    <meta property="og:image" content="/ogp.png" />
+    <meta property="og:site_name" content="スマンゴ - スマブラビンゴツール" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
   </Head>
 )
