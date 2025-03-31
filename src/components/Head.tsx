@@ -2,7 +2,7 @@ import Head from 'next/head'
 
 export const PageHead = (): React.ReactElement => (
   <Head>
-    <title>SmashBingo - スマブラビンゴツール</title>
+    <title>スマンゴ - スマブラビンゴツール</title>
     <meta
       name="description"
       content="スマブラのビンゴカードを作成するサイトです。"
