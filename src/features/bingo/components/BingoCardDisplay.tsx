@@ -21,15 +21,15 @@ export const BingoCardDisplay = ({
     return null
   }
 
-  const selectedFightersNumbers = selectedFighters
-    .map((fighter) => fighter.number)
-    .sort((a, b) => a - b)
-  const duplicatedNumbers = selectedFightersNumbers.filter(
-    (number, index, self) => self.indexOf(number) !== index,
-  )
-  const dlcNumbers = selectedFighters
-    .filter((fighter) => fighter.isDlc)
-    .map((fighter) => fighter.number)
+  // const selectedFightersNumbers = selectedFighters
+  //   .map((fighter) => fighter.number)
+  //   .sort((a, b) => a - b)
+  // const duplicatedNumbers = selectedFightersNumbers.filter(
+  //   (number, index, self) => self.indexOf(number) !== index,
+  // )
+  // const dlcNumbers = selectedFighters
+  //   .filter((fighter) => fighter.isDlc)
+  //   .map((fighter) => fighter.number)
 
   return (
     <>
@@ -43,9 +43,9 @@ export const BingoCardDisplay = ({
           />
         ))}
       </div>
-      <p>選択: {selectedFightersNumbers.join(',')}</p>
+      {/* <p>選択: {selectedFightersNumbers.join(',')}</p>
       <p>重複: {duplicatedNumbers.join(',')}</p>
-      <p>DLC: {dlcNumbers.join(',')}</p>
+      <p>DLC: {dlcNumbers.join(',')}</p> */}
     </>
   )
 }
