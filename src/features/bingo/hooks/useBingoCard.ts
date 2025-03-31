@@ -1,27 +1,42 @@
 /**
- * ファイター抽出カスタムフック
- * @description ファイターの抽出に関するロジックを管理するカスタムフック
+ * ビンゴカードの状態を管理するカスタムフック
+ * @description ファイターの抽出、ファイターの選択、ファイターの削除、ダッシュファイターの除外、DLCファイターの除外、ビンゴカードの状態のシリアライズ、ビンゴカードの状態のデシリアライズに関するロジックを管理するカスタムフック
  */
 
 import { useState } from 'react'
 
 import { useFighters } from './useFighters'
+import { BingoState } from './useSerializeBingoState'
 
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
+import { SerializedBingoState } from '~/features/bingo/types/bingo'
 import { getRandomElements, shuffleArray } from '~/features/bingo/utils'
 
 /**
- * ファイター抽出カスタムフック
- * @returns ファイター抽出に関する状態と関数
+ * ビンゴカードの状態を管理するカスタムフック
+ * 提供する機能
+ * - ファイターの抽出
+ * - ファイターの選択
+ * - ファイターの削除
+ * - ダッシュファイターの除外
+ * - DLCファイターの除外
+ * - ビンゴカードの状態のシリアライズ
+ * - ビンゴカードの状態のデシリアライズ
+ * @returns ビンゴカードの状態に関する状態と関数
  */
 export const useBingoCard = () => {
+  // 状態管理
+  // - ビンゴカードに配置されたファイターとそのアクティブ状態
+  // - 必ず含めるファイター・除外するファイター
+  // - ビンゴカードの状態とその状態をシリアライズした文字列
   const {
     fighters,
     isLoading: isLoadingFighters,
     error: errorFighters,
   } = useFighters()
   const [selectedFighters, setSelectedFighters] = useState<Array<Fighter>>([])
+  const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
   const [mustIncludeFighters, setMustIncludeFighters] = useState<
     Array<Fighter>
   >([])
@@ -30,6 +45,8 @@ export const useBingoCard = () => {
     useState<boolean>(false)
   const [isExcludeDlcFighters, setIsExcludeDlcFighters] =
     useState<boolean>(false)
+  const [stateString, setStateString] = useState<string>('')
+  const [currentState, setCurrentState] = useState<BingoState | null>(null)
 
   /**
    * ランダムに25個のファイターを抽出する
@@ -94,6 +111,7 @@ export const useBingoCard = () => {
 
     // シャッフルしたファイターを選択済みのファイターとして設定する
     setSelectedFighters(shuffledFighters)
+    setActiveFighters(new Set()) // アクティブ状態をリセット
   }
 
   /**
@@ -137,6 +155,69 @@ export const useBingoCard = () => {
     setIsExcludeDlcFighters((prev) => !prev)
   }
 
+  /**
+   * ファイターカードのクリックハンドラー
+   * @param fighterId - クリックされたファイターのID
+   */
+  const handleFighterClick = (fighterId: string) => {
+    setActiveFighters((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(fighterId)) {
+        newSet.delete(fighterId)
+      } else {
+        newSet.add(fighterId)
+      }
+      return newSet
+    })
+  }
+
+  /**
+   * ビンゴカードの状態を文字列に変換する
+   */
+  const serializeState = (): string => {
+    if (!currentState) {
+      setStateString('')
+      return ''
+    }
+    const state: SerializedBingoState = {
+      s: currentState.selectedFighters.map((f) => f.fighterId),
+      m: currentState.mustIncludeFighters.map((f) => f.fighterId),
+      e: currentState.excludeFighters.map((f) => f.fighterId),
+      d: currentState.isExcludeDashFighters,
+      l: currentState.isExcludeDlcFighters,
+      a: Array.from(currentState.activeFighters),
+    }
+    const serialized = btoa(JSON.stringify(state))
+    setStateString(serialized)
+    return serialized
+  }
+
+  /**
+   * 文字列からビンゴカードの状態を復元する
+   */
+  const deserializeState = (
+    stateString: string,
+    fighters: FightersData,
+  ): BingoState => {
+    const state = JSON.parse(atob(stateString)) as SerializedBingoState
+    const fightersArray = Object.values(fighters) as Array<Fighter>
+
+    return {
+      selectedFighters: state.s.map(
+        (id) => fightersArray.find((f) => f.fighterId === id)!,
+      ),
+      mustIncludeFighters: state.m.map(
+        (id) => fightersArray.find((f) => f.fighterId === id)!,
+      ),
+      excludeFighters: state.e.map(
+        (id) => fightersArray.find((f) => f.fighterId === id)!,
+      ),
+      isExcludeDashFighters: state.d,
+      isExcludeDlcFighters: state.l,
+      activeFighters: new Set(state.a),
+    }
+  }
+
   return {
     fighters,
     isLoadingFighters,
@@ -146,10 +227,15 @@ export const useBingoCard = () => {
     excludeFighters,
     isExcludeDashFighters,
     isExcludeDlcFighters,
+    stateString,
+    activeFighters,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
+    handleFighterClick,
+    serializeState,
+    deserializeState,
   }
 }

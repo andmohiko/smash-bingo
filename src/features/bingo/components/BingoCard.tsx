@@ -15,7 +15,6 @@ import { useBingoCard } from '~/features/bingo/hooks/useBingoCard'
 import { BingoState } from '~/features/bingo/hooks/useSerializeBingoState'
 
 export const BingoCard = (): React.ReactNode => {
-  const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const {
@@ -27,11 +26,13 @@ export const BingoCard = (): React.ReactNode => {
     excludeFighters,
     isExcludeDashFighters,
     isExcludeDlcFighters,
+    activeFighters,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
+    handleFighterClick,
   } = useBingoCard()
 
   /**
@@ -51,68 +52,51 @@ export const BingoCard = (): React.ReactNode => {
   const handleExtractFighters = () => {
     if (!fighters) return
     extractFighters(fighters)
-    setActiveFighters(new Set()) // アクティブ状態をリセット
     setIsConfirmModalOpen(false)
   }
 
-  /**
-   * ファイターカードのクリックハンドラー
-   * @param fighterId - クリックされたファイターのID
-   */
-  const handleFighterClick = (fighterId: string) => {
-    setActiveFighters((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(fighterId)) {
-        newSet.delete(fighterId)
-      } else {
-        newSet.add(fighterId)
-      }
-      return newSet
-    })
-  }
+  // /**
+  //  * 状態を復元するハンドラー
+  //  */
+  // const handleStateRestore = (state: BingoState) => {
+  //   if (!fighters) return
 
-  /**
-   * 状態を復元するハンドラー
-   */
-  const handleStateRestore = (state: BingoState) => {
-    if (!fighters) return
+  //   // 除外設定を初期状態に戻す
+  //   if (isExcludeDashFighters !== false) {
+  //     toggleDashFighterExclusion()
+  //   }
+  //   if (isExcludeDlcFighters !== false) {
+  //     toggleDlcFighterExclusion()
+  //   }
 
-    // 除外設定を初期状態に戻す
-    if (isExcludeDashFighters !== false) {
-      toggleDashFighterExclusion()
-    }
-    if (isExcludeDlcFighters !== false) {
-      toggleDlcFighterExclusion()
-    }
+  //   // 必須ファイターと除外ファイターをクリア
+  //   mustIncludeFighters.forEach((fighter) =>
+  //     removeFighter(fighter.fighterId, 'include'),
+  //   )
+  //   excludeFighters.forEach((fighter) =>
+  //     removeFighter(fighter.fighterId, 'exclude'),
+  //   )
 
-    // 必須ファイターと除外ファイターをクリア
-    mustIncludeFighters.forEach((fighter) =>
-      removeFighter(fighter.fighterId, 'include'),
-    )
-    excludeFighters.forEach((fighter) =>
-      removeFighter(fighter.fighterId, 'exclude'),
-    )
+  //   // 新しい状態を設定
+  //   state.mustIncludeFighters.forEach((fighter) =>
+  //     addFighter(fighter, 'include'),
+  //   )
+  //   state.excludeFighters.forEach((fighter) => addFighter(fighter, 'exclude'))
 
-    // 新しい状態を設定
-    state.mustIncludeFighters.forEach((fighter) =>
-      addFighter(fighter, 'include'),
-    )
-    state.excludeFighters.forEach((fighter) => addFighter(fighter, 'exclude'))
+  //   // 除外設定を復元
+  //   if (state.isExcludeDashFighters) {
+  //     toggleDashFighterExclusion()
+  //   }
+  //   if (state.isExcludeDlcFighters) {
+  //     toggleDlcFighterExclusion()
+  //   }
 
-    // 除外設定を復元
-    if (state.isExcludeDashFighters) {
-      toggleDashFighterExclusion()
-    }
-    if (state.isExcludeDlcFighters) {
-      toggleDlcFighterExclusion()
-    }
+  //   // 選択されたファイターを設定
+  //   extractFighters(fighters, state.selectedFighters)
 
-    // 選択されたファイターを設定
-    extractFighters(fighters, state.selectedFighters)
-
-    // アクティブな状態を更新
-    setActiveFighters(state.activeFighters)
-  }
+  //   // アクティブな状態を更新
+  //   setActiveFighters(state.activeFighters)
+  // }
 
   if (isLoadingFighters) {
     return <div>読み込み中...</div>
