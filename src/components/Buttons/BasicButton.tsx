@@ -2,12 +2,14 @@ type Props = {
   children: React.ReactNode
   onClick: () => void
   importance?: 'primary' | 'secondary' | 'tertiary'
+  isDisabled?: boolean
 }
 
 export const BasicButton = ({
   children,
   onClick,
   importance = 'primary',
+  isDisabled = false,
 }: Props) => {
   // primary is solid blue, secondary is outlined blue, tertiary is ghost blue,
   const importanceClass = {
@@ -19,7 +21,10 @@ export const BasicButton = ({
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2.5 rounded-lg transition-colors ${importanceClass[importance]}`}
+      className={`px-4 py-2.5 rounded-lg transition-colors ${
+        importanceClass[importance]
+      } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      disabled={isDisabled}
     >
       {children}
     </button>

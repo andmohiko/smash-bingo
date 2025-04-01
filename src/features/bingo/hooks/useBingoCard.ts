@@ -1,43 +1,44 @@
 /**
- * ファイター抽出カスタムフック
- * @description ファイターの抽出に関するロジックを管理するカスタムフック
+ * ビンゴカードの状態を管理するカスタムフック
+ * @description ファイターの抽出、ファイターの選択、ファイターの削除、ダッシュファイターの除外、DLCファイターの除外、ビンゴカードの状態のシリアライズ、ビンゴカードの状態のデシリアライズに関するロジックを管理するカスタムフック
  */
 
 import { useState } from 'react'
 
+import { useFighters } from './useFighters'
+import { useSerializeBingoState } from './useSerializeBingoState'
+
+import type { BingoState } from '~/features/bingo/types/bingo'
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
-/**
- * 配列をシャッフルする
- * @param array - 対象の配列
- * @returns シャッフルされた配列
- */
-const shuffleArray = <T extends object>(array: Array<T>): Array<T> => {
-  return [...array].sort(() => 0.5 - Math.random())
-}
+import { getRandomElements, shuffleArray } from '~/features/bingo/utils'
 
 /**
- * 配列からランダムに指定数の要素を抽出する
- * @param array - 対象の配列
- * @param count - 抽出する要素の数
- * @returns ランダムに抽出された要素の配列
+ * ビンゴカードの状態を管理するカスタムフック
+ * 提供する機能
+ * - ファイターの抽出
+ * - ファイターの選択
+ * - ファイターの削除
+ * - ダッシュファイターの除外
+ * - DLCファイターの除外
+ * - ビンゴカードの状態のシリアライズ
+ * - ビンゴカードの状態のデシリアライズ
+ * @returns ビンゴカードの状態に関する状態と関数
  */
-const getRandomElements = <T extends object>(
-  array: Array<T>,
-  count: number,
-): Array<T> => {
-  // 要素をランダムに並び替え
-  const shuffled = shuffleArray(array)
-  // 先頭からcount個の要素を抽出
-  return shuffled.slice(0, count)
-}
-
-/**
- * ファイター抽出カスタムフック
- * @returns ファイター抽出に関する状態と関数
- */
-export const useFighterExtraction = () => {
+export const useBingoCard = () => {
+  // 状態管理
+  // - ビンゴカードに配置されたファイターとそのアクティブ状態
+  // - 必ず含めるファイター・除外するファイター
+  // - ビンゴカードの状態とその状態をシリアライズした文字列
+  const {
+    fighters,
+    isLoading: isLoadingFighters,
+    error: errorFighters,
+  } = useFighters()
+  const { stateString, setStateString, serializeState, deserializeState } =
+    useSerializeBingoState()
   const [selectedFighters, setSelectedFighters] = useState<Array<Fighter>>([])
+  const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
   const [mustIncludeFighters, setMustIncludeFighters] = useState<
     Array<Fighter>
   >([])
@@ -46,6 +47,8 @@ export const useFighterExtraction = () => {
     useState<boolean>(false)
   const [isExcludeDlcFighters, setIsExcludeDlcFighters] =
     useState<boolean>(false)
+  const [currentState, setCurrentState] = useState<BingoState | null>(null)
+  const [bingoStateError, setBingoStateError] = useState<string | null>(null)
 
   /**
    * ランダムに25個のファイターを抽出する
@@ -110,6 +113,18 @@ export const useFighterExtraction = () => {
 
     // シャッフルしたファイターを選択済みのファイターとして設定する
     setSelectedFighters(shuffledFighters)
+    setActiveFighters(new Set()) // アクティブ状態をリセット
+
+    // 現在の状態を更新
+    const newState: BingoState = {
+      selectedFighters: shuffledFighters,
+      mustIncludeFighters,
+      excludeFighters,
+      isExcludeDashFighters,
+      isExcludeDlcFighters,
+      activeFighters: new Set(),
+    }
+    setCurrentState(newState)
   }
 
   /**
@@ -153,16 +168,103 @@ export const useFighterExtraction = () => {
     setIsExcludeDlcFighters((prev) => !prev)
   }
 
+  /**
+   * ファイターカードのクリックハンドラー
+   * @param fighterId - クリックされたファイターのID
+   */
+  const handleFighterClick = (fighterId: string) => {
+    setActiveFighters((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(fighterId)) {
+        newSet.delete(fighterId)
+      } else {
+        newSet.add(fighterId)
+      }
+      return newSet
+    })
+
+    // 現在の状態を更新
+    setCurrentState((prev) => {
+      if (!prev) return null
+      return {
+        ...prev,
+        activeFighters: new Set([...prev.activeFighters, fighterId]),
+      }
+    })
+  }
+
+  /**
+   * ビンゴカードの状態をシリアライズする
+   */
+  const onSerializeState = () => {
+    // 現在の状態を作成
+    const state: BingoState = {
+      selectedFighters,
+      mustIncludeFighters,
+      excludeFighters,
+      isExcludeDashFighters,
+      isExcludeDlcFighters,
+      activeFighters,
+    }
+    // 現在の状態をシリアライズ
+    const serializedString = serializeState(state)
+    setStateString(serializedString)
+    setCurrentState(state)
+    return serializedString
+  }
+
+  /**
+   * ビンゴカードの状態を復元する
+   */
+  const onStateRestore = () => {
+    if (!stateString || !fighters) return
+
+    try {
+      // 状態を復元
+      const restoredState = deserializeState(stateString, fighters)
+
+      // 各状態を更新
+      setSelectedFighters(restoredState.selectedFighters)
+      setMustIncludeFighters(restoredState.mustIncludeFighters)
+      setExcludeFighters(restoredState.excludeFighters)
+
+      // 除外設定を更新
+      setIsExcludeDashFighters(restoredState.isExcludeDashFighters)
+      setIsExcludeDlcFighters(restoredState.isExcludeDlcFighters)
+
+      // アクティブな状態を更新
+      setActiveFighters(restoredState.activeFighters)
+
+      // 現在の状態を更新
+      setCurrentState(restoredState)
+      setBingoStateError(null)
+    } catch (error) {
+      setBingoStateError('ビンゴカードの状態の復元に失敗しました')
+      console.error('ビンゴカードの状態の復元に失敗しました:', error)
+    }
+  }
+
   return {
+    fighters,
+    isLoadingFighters,
+    errorFighters,
     selectedFighters,
     mustIncludeFighters,
     excludeFighters,
     isExcludeDashFighters,
     isExcludeDlcFighters,
+    stateString,
+    activeFighters,
+    currentState,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
+    handleFighterClick,
+    onSerializeState,
+    onStateRestore,
+    setStateString,
+    bingoStateError,
   }
 }
