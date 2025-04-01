@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import { BasicButton } from '~/components/Buttons/BasicButton'
 
 type Props = {
@@ -27,19 +25,9 @@ export const BingoStateManager: React.FC<Props> = ({
   onStateRestore,
   bingoStateError,
 }) => {
-  const [showCopyTooltip, setShowCopyTooltip] = useState(false)
-
   const handleCopy = async () => {
     const serialized = onSerializeState()
     await navigator.clipboard.writeText(serialized)
-
-    // ツールチップを表示
-    setShowCopyTooltip(true)
-
-    // 2秒後に非表示
-    setTimeout(() => {
-      setShowCopyTooltip(false)
-    }, 2000)
   }
 
   return (
