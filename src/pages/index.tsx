@@ -1,12 +1,12 @@
 import type { NextPage } from 'next'
 
 import { DefaultLayout } from '~/components/Layouts/DefaultLayout'
-import { BingoCard } from '~/features/bingo/components/BingoCard'
+import { BingoCardContainer } from '~/features/bingo/components/BingoCardContainer'
 
 const Home: NextPage = () => {
   return (
     <DefaultLayout>
-      <BingoCard />
+      <BingoCardContainer />
     </DefaultLayout>
   )
 }

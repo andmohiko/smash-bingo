@@ -7,12 +7,18 @@ import { BaseModal } from '~/components/Modals/BaseModal'
  */
 type Props = {
   isOpen: boolean
+  message: React.ReactNode
+  confirmText: string
+  cancelText: string
   onConfirm: () => void
   onCancel: () => void
 }
 
 export const ConfirmModal = ({
   isOpen,
+  message,
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
 }: Props): React.ReactNode => {
@@ -21,15 +27,13 @@ export const ConfirmModal = ({
   return (
     <BaseModal isOpen={isOpen} onClose={onCancel}>
       <p className="text-gray-600 mb-6" style={{ lineHeight: '1.5' }}>
-        ビンゴカードを再生成しますか？
-        <br />
-        現在の選択状態は失われます。
+        {message}
       </p>
       <div className="flex justify-end gap-4 pt-4">
         <BasicButton onClick={onCancel} importance="tertiary">
-          キャンセル
+          {cancelText}
         </BasicButton>
-        <BasicButton onClick={onConfirm}>再生成する</BasicButton>
+        <BasicButton onClick={onConfirm}>{confirmText}</BasicButton>
       </div>
     </BaseModal>
   )
