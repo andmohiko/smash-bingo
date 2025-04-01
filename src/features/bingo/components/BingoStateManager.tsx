@@ -1,4 +1,5 @@
 import { BasicButton } from '~/components/Buttons/BasicButton'
+import { TextInput } from '~/components/Inputs/TextInput'
 
 type Props = {
   /** 現在のビンゴカードの状態を文字列化したもの */
@@ -44,12 +45,10 @@ export const BingoStateManager: React.FC<Props> = ({
       </div>
 
       <div className="flex gap-2">
-        <input
-          type="text"
+        <TextInput
           value={stateString}
           onChange={(e) => onChangeStateString(e.target.value)}
           placeholder="状態の文字列を入力..."
-          className="flex-1 px-4 py-2 border rounded"
         />
         <BasicButton onClick={handleCopy} isDisabled={!stateString}>
           コピー
