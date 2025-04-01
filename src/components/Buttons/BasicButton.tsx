@@ -3,6 +3,7 @@ type Props = {
   onClick: () => void
   importance?: 'primary' | 'secondary' | 'tertiary'
   isDisabled?: boolean
+  leftIcon?: React.ReactNode
 }
 
 export const BasicButton = ({
@@ -10,6 +11,7 @@ export const BasicButton = ({
   onClick,
   importance = 'primary',
   isDisabled = false,
+  leftIcon,
 }: Props) => {
   // primary is solid blue, secondary is outlined blue, tertiary is ghost blue,
   const importanceClass = {
@@ -26,7 +28,10 @@ export const BasicButton = ({
       } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       disabled={isDisabled}
     >
-      {children}
+      <div className="flex items-center gap-2">
+        {leftIcon && <span className="mr-2">{leftIcon}</span>}
+        {children}
+      </div>
     </button>
   )
 }
