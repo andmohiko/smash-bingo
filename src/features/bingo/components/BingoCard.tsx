@@ -72,57 +72,61 @@ export const BingoCard = (): React.ReactNode => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        スマンゴ - スマブラビンゴツール
-      </h1>
-      <div className="flex flex-col items-center gap-8">
-        <div className="flex gap-4">
-          <BasicButton
-            onClick={() => setIsSettingsModalOpen(true)}
-            importance="secondary"
-          >
-            条件を設定する
-          </BasicButton>
-          <BasicButton onClick={handleExtractClick}>
-            ビンゴカードを生成する
-          </BasicButton>
-        </div>
-
-        <BingoCardDisplay
-          selectedFighters={selectedFighters}
-          activeFighters={activeFighters}
-          onFighterClick={handleFighterClick}
-        />
-
-        <BingoStateManager
-          stateString={stateString}
-          onChangeStateString={setStateString}
-          onSerializeState={onSerializeState}
-          onStateRestore={onStateRestore}
-          bingoStateError={bingoStateError}
-        />
-
-        <BingoSettingsModal
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-          fighters={fighters}
-          mustIncludeFighters={mustIncludeFighters}
-          excludeFighters={excludeFighters}
-          isExcludeDashFighters={isExcludeDashFighters}
-          isExcludeDlcFighters={isExcludeDlcFighters}
-          addFighter={addFighter}
-          removeFighter={removeFighter}
-          toggleDashFighterExclusion={toggleDashFighterExclusion}
-          toggleDlcFighterExclusion={toggleDlcFighterExclusion}
-        />
-
-        <ConfirmModal
-          isOpen={isConfirmModalOpen}
-          onConfirm={handleExtractFighters}
-          onCancel={() => setIsConfirmModalOpen(false)}
-        />
+    <div className="container mx-auto px-4 py-8 flex flex-col items-center gap-8">
+      <div className="flex gap-4">
+        <BasicButton
+          onClick={() => setIsSettingsModalOpen(true)}
+          importance="secondary"
+        >
+          条件を設定する
+        </BasicButton>
+        <BasicButton onClick={handleExtractClick}>
+          ビンゴカードを生成する
+        </BasicButton>
       </div>
+
+      <BingoCardDisplay
+        selectedFighters={selectedFighters}
+        activeFighters={activeFighters}
+        onFighterClick={handleFighterClick}
+      />
+
+      <BingoStateManager
+        stateString={stateString}
+        onChangeStateString={setStateString}
+        onSerializeState={onSerializeState}
+        onStateRestore={onStateRestore}
+        bingoStateError={bingoStateError}
+      />
+
+      <BingoSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        fighters={fighters}
+        mustIncludeFighters={mustIncludeFighters}
+        excludeFighters={excludeFighters}
+        isExcludeDashFighters={isExcludeDashFighters}
+        isExcludeDlcFighters={isExcludeDlcFighters}
+        addFighter={addFighter}
+        removeFighter={removeFighter}
+        toggleDashFighterExclusion={toggleDashFighterExclusion}
+        toggleDlcFighterExclusion={toggleDlcFighterExclusion}
+      />
+
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onConfirm={handleExtractFighters}
+        onCancel={() => setIsConfirmModalOpen(false)}
+        message={
+          <>
+            ビンゴカードを再生成しますか？
+            <br />
+            現在の選択状態は失われます。
+          </>
+        }
+        confirmText="再生成する"
+        cancelText="キャンセル"
+      />
     </div>
   )
 }
