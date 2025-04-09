@@ -55,7 +55,7 @@ export const BingoCardContainer = () => {
       <div className="flex flex-wrap gap-8 justify-center">
         {/* 1枚目のカード */}
         <div className="flex-1 min-w-[320px] max-w-[640px]">
-          <span>{room?.card1State}</span>
+          {/* <span>{room?.card1State}</span> */}
           <BingoCard cardNumber={1} onChange={handleCard1StateChange} />
         </div>
 
