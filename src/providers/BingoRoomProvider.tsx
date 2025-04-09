@@ -32,7 +32,7 @@ const BingoRoomContext = createContext<{
   passcode: string | null
   joinRoom: (passcode: string) => void
   createRoom: () => Promise<void>
-  updateRoom: (cardNum: 1 | 2, serializedState: string) => Promise<void>
+  updateRoom: (cardNum: 1 | 2, serializedState: string | null) => Promise<void>
 }>({
   roomId: null,
   room: null,

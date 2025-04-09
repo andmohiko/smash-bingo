@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { BingoCard } from './BingoCard'
 import { BingoRoomController } from './BingoRoomController'
@@ -34,10 +34,24 @@ export const BingoCardContainer = () => {
     confirmModalHandlers.onOpen()
   }
 
-  const handleRemoveCardConfirm = () => {
+  const handleRemoveCardConfirm = async () => {
     setCardCount(1)
+    await updateRoom(2, null)
     confirmModalHandlers.onClose()
   }
+
+  // 2枚目のカードが追加・削除されたらUIも表示を更新する
+  useEffect(() => {
+    if (room?.card2State && cardCount === 1) {
+      setCardCount(2)
+      return
+    }
+    if (!room?.card2State && cardCount === 2) {
+      setCardCount(1)
+      return
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room])
 
   return (
     <div className="container mx-auto px-4 py-8">
