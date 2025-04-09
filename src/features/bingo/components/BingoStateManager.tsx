@@ -3,7 +3,7 @@ import { TextInput } from '~/components/Inputs/TextInput'
 
 type Props = {
   /** 現在のビンゴカードの状態を文字列化したもの */
-  stateString: string
+  stateString: string | null
   /** ビンゴカードの状態を文字列化する関数 */
   onChangeStateString: (stateString: string) => void
   /** ビンゴカードの状態を文字列化する関数 */
@@ -46,7 +46,7 @@ export const BingoStateManager: React.FC<Props> = ({
 
       <div className="flex gap-2">
         <TextInput
-          value={stateString}
+          value={stateString ?? ''}
           onChange={(e) => onChangeStateString(e.target.value)}
           placeholder="状態の文字列を入力..."
         />

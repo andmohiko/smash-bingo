@@ -13,7 +13,12 @@ import { ConfirmModal } from './ConfirmModal'
 import { BasicButton } from '~/components/Buttons/BasicButton'
 import { useBingoCard } from '~/features/bingo/hooks/useBingoCard'
 
-export const BingoCard = (): React.ReactNode => {
+type Props = {
+  cardNumber: 1 | 2
+  onChange: (serializedState: string) => void
+}
+
+export const BingoCard = ({ cardNumber, onChange }: Props) => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const {
@@ -25,19 +30,18 @@ export const BingoCard = (): React.ReactNode => {
     excludeFighters,
     isExcludeDashFighters,
     isExcludeDlcFighters,
+    remoteStateString: stateString,
     activeFighters,
-    stateString,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
     handleFighterClick,
-    setStateString,
     onSerializeState,
     onStateRestore,
     bingoStateError,
-  } = useBingoCard()
+  } = useBingoCard(cardNumber, onChange)
 
   /**
    * 抽出ボタンのクリックハンドラー
@@ -93,7 +97,7 @@ export const BingoCard = (): React.ReactNode => {
 
       <BingoStateManager
         stateString={stateString}
-        onChangeStateString={setStateString}
+        onChangeStateString={onChange}
         onSerializeState={onSerializeState}
         onStateRestore={onStateRestore}
         bingoStateError={bingoStateError}

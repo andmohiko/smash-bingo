@@ -59,13 +59,21 @@ export const useBingoRoom = () => {
 
   const updateRoom = useCallback(
     async (cardNum: 1 | 2, serializedState: string) => {
+      console.log('room', room, cardNum, serializedState)
       if (room) {
-        await updateRoomOperation(room.roomId, {
-          updatedAt: serverTimestamp,
-          ...(cardNum === 1
-            ? { card1State: serializedState }
-            : { card2State: serializedState }),
-        })
+        if (cardNum === 1) {
+          await updateRoomOperation(room.roomId, {
+            updatedAt: serverTimestamp,
+            card1State: serializedState,
+          })
+        } else if (cardNum === 2) {
+          await updateRoomOperation(room.roomId, {
+            updatedAt: serverTimestamp,
+            card2State: serializedState,
+          })
+        } else {
+          throw new Error('Invalid card number')
+        }
       }
     },
     [room],

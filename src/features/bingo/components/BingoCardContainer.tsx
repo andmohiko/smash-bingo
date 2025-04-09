@@ -5,8 +5,8 @@ import { BingoRoomController } from './BingoRoomController'
 import { ConfirmModal } from './ConfirmModal'
 
 import { BasicButton } from '~/components/Buttons/BasicButton'
-import { useBingoRoom } from '~/features/bingo/hooks/useBingoRoom'
 import { useDisclosure } from '~/hooks/useDisclosure'
+import { useBingoRoomContext } from '~/providers/BingoRoomProvider'
 
 /**
  * ビンゴカードコンテナコンポーネント
@@ -15,7 +15,16 @@ import { useDisclosure } from '~/hooks/useDisclosure'
 export const BingoCardContainer = () => {
   const [cardCount, setCardCount] = useState<1 | 2>(1)
   const [isConfirmModalOpen, confirmModalHandlers] = useDisclosure()
-  const { passcode, createRoom, joinRoom } = useBingoRoom()
+  const { room, passcode, createRoom, joinRoom, updateRoom } =
+    useBingoRoomContext()
+
+  const handleCard1StateChange = (serializedState: string) => {
+    updateRoom(1, serializedState)
+  }
+
+  const handleCard2StateChange = (serializedState: string) => {
+    updateRoom(2, serializedState)
+  }
 
   const handleAddCard = () => {
     setCardCount(2)
@@ -46,7 +55,8 @@ export const BingoCardContainer = () => {
       <div className="flex flex-wrap gap-8 justify-center">
         {/* 1枚目のカード */}
         <div className="flex-1 min-w-[320px] max-w-[640px]">
-          <BingoCard />
+          <span>{room?.card1State}</span>
+          <BingoCard cardNumber={1} onChange={handleCard1StateChange} />
         </div>
 
         {cardCount === 1 && (
@@ -76,7 +86,7 @@ export const BingoCardContainer = () => {
         {/* 2枚目のカード */}
         {cardCount === 2 && (
           <div className="flex-1 min-w-[320px] max-w-[640px]">
-            <BingoCard />
+            <BingoCard cardNumber={2} onChange={handleCard2StateChange} />
           </div>
         )}
 
