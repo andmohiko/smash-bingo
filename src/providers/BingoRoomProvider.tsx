@@ -77,7 +77,6 @@ const BingoRoomProvider = ({
       setRoomId(roomId)
       setPasscode(passcode)
       setError(null)
-      console.log('roomId', roomId)
     } catch (err) {
       setError('ルームの作成に失敗しました')
       console.error('Room creation error:', err)
@@ -86,7 +85,6 @@ const BingoRoomProvider = ({
 
   const updateRoom = useCallback(
     async (cardNum: 1 | 2, serializedState: string) => {
-      console.log('room', room, cardNum, serializedState)
       if (room) {
         if (cardNum === 1) {
           await updateRoomOperation(room.roomId, {

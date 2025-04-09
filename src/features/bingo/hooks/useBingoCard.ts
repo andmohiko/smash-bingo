@@ -102,11 +102,6 @@ export const useBingoCard = (
       activeFighters,
     })
 
-    console.log(
-      'local and remote state',
-      serializedString === remoteStateString,
-    )
-
     // DBからの変更により、ローカルの状態とDBの状態が合わないならDBの状態を更新する
     if (isExternalUpdate) {
       setIsExternalUpdate(false)
