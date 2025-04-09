@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 
 import { BingoCard } from './BingoCard'
 import { BingoRoomController } from './BingoRoomController'
-import { ConfirmModal } from './ConfirmModal'
 
-import { BasicButton } from '~/components/Buttons/BasicButton'
+import { VerticalButton } from '~/components/Buttons/VerticalButton'
+import { DeleteConfirmModal } from '~/components/Modals/DeleteConfirmModal'
 import { useDisclosure } from '~/hooks/useDisclosure'
 import { useBingoRoomContext } from '~/providers/BingoRoomProvider'
 
@@ -74,63 +74,45 @@ export const BingoCardContainer = () => {
         </div>
 
         {cardCount === 1 && (
-          <BasicButton
-            onClick={handleAddCard}
-            importance="secondary"
-            leftIcon={
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            }
-          >
-            <span>カードを追加</span>
-          </BasicButton>
+          <div className="flex flex-col justify-center">
+            <VerticalButton
+              onClick={handleAddCard}
+              importance="secondary"
+              leftIcon={
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              }
+            >
+              <span>カードを追加</span>
+            </VerticalButton>
+          </div>
         )}
 
         {/* 2枚目のカード */}
         {cardCount === 2 && (
           <div className="flex-1 min-w-[320px] max-w-[640px]">
-            <BingoCard cardNumber={2} onChange={handleCard2StateChange} />
+            <BingoCard
+              cardNumber={2}
+              onChange={handleCard2StateChange}
+              handleRemoveCardClick={handleRemoveCardClick}
+            />
           </div>
-        )}
-
-        {cardCount === 2 && (
-          <BasicButton
-            onClick={handleRemoveCardClick}
-            importance="secondary"
-            leftIcon={
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            }
-          >
-            <span>2枚目のカードを削除</span>
-          </BasicButton>
         )}
       </div>
 
       {/* 削除確認モーダル */}
-      <ConfirmModal
+      <DeleteConfirmModal
         isOpen={isConfirmModalOpen}
         onConfirm={handleRemoveCardConfirm}
         onCancel={confirmModalHandlers.onClose}

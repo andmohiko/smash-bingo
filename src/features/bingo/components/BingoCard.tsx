@@ -8,17 +8,23 @@ import { useState } from 'react'
 import { BingoCardDisplay } from './BingoCardDisplay'
 import { BingoSettingsModal } from './BingoCardForm'
 import { BingoStateManager } from './BingoStateManager'
-import { ConfirmModal } from './ConfirmModal'
 
 import { BasicButton } from '~/components/Buttons/BasicButton'
+import { DeleteIconButton } from '~/components/Buttons/DeleteButton'
+import { ConfirmModal } from '~/components/Modals/ConfirmModal'
 import { useBingoCard } from '~/features/bingo/hooks/useBingoCard'
 
 type Props = {
   cardNumber: 1 | 2
   onChange: (serializedState: string) => void
+  handleRemoveCardClick?: () => void
 }
 
-export const BingoCard = ({ cardNumber, onChange }: Props) => {
+export const BingoCard = ({
+  cardNumber,
+  onChange,
+  handleRemoveCardClick,
+}: Props) => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const {
@@ -87,6 +93,12 @@ export const BingoCard = ({ cardNumber, onChange }: Props) => {
         <BasicButton onClick={handleExtractClick}>
           ビンゴカードを生成する
         </BasicButton>
+        {handleRemoveCardClick && (
+          <DeleteIconButton
+            onClick={handleRemoveCardClick}
+            importance="secondary"
+          />
+        )}
       </div>
 
       <BingoCardDisplay
