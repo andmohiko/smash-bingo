@@ -36,8 +36,8 @@ export const BingoCard = ({
     excludeFighters,
     isExcludeDashFighters,
     isExcludeDlcFighters,
-    remoteStateString: stateString,
     activeFighters,
+    localStateString,
     extractFighters,
     addFighter,
     removeFighter,
@@ -46,6 +46,7 @@ export const BingoCard = ({
     handleFighterClick,
     onSerializeState,
     onStateRestore,
+    setLocalStateString,
     bingoStateError,
   } = useBingoCard(cardNumber, onChange)
 
@@ -108,8 +109,8 @@ export const BingoCard = ({
       />
 
       <BingoStateManager
-        stateString={stateString}
-        onChangeStateString={onChange}
+        stateString={localStateString}
+        onChangeStateString={setLocalStateString}
         onSerializeState={onSerializeState}
         onStateRestore={onStateRestore}
         bingoStateError={bingoStateError}

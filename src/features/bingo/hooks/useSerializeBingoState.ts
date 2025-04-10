@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import type {
   BingoState,
@@ -7,6 +7,7 @@ import type {
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
 export const useSerializeBingoState = () => {
+  const [localStateString, setLocalStateString] = useState<string>('')
   /**
    * ビンゴカードの状態を文字列に変換する
    * @param currentState - ビンゴカードの状態
@@ -22,6 +23,7 @@ export const useSerializeBingoState = () => {
       a: Array.from(currentState.activeFighters),
     }
     const serialized = btoa(JSON.stringify(state))
+    setLocalStateString(serialized)
     return serialized
   }, [])
 
@@ -60,6 +62,8 @@ export const useSerializeBingoState = () => {
   )
 
   return {
+    localStateString,
+    setLocalStateString,
     serializeState,
     deserializeState,
   }

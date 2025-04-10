@@ -51,7 +51,12 @@ export const useBingoCard = (
     }
     return null
   }, [room, cardNumber])
-  const { serializeState, deserializeState } = useSerializeBingoState()
+  const {
+    localStateString,
+    setLocalStateString,
+    serializeState,
+    deserializeState,
+  } = useSerializeBingoState()
   const [selectedFighters, setSelectedFighters] = useState<Array<Fighter>>([])
   const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
   const [mustIncludeFighters, setMustIncludeFighters] = useState<
@@ -289,11 +294,11 @@ export const useBingoCard = (
    * ビンゴカードの状態を復元する
    */
   const onStateRestore = () => {
-    if (!remoteStateString || !fighters) return
+    if (!localStateString || !fighters) return
 
     try {
       // 状態を復元
-      const restoredState = deserializeState(remoteStateString, fighters)
+      const restoredState = deserializeState(localStateString, fighters)
 
       // 各状態を更新
       setSelectedFighters(restoredState.selectedFighters)
@@ -328,6 +333,7 @@ export const useBingoCard = (
     remoteStateString,
     activeFighters,
     currentState,
+    localStateString,
     extractFighters,
     addFighter,
     removeFighter,
@@ -337,5 +343,6 @@ export const useBingoCard = (
     onSerializeState,
     onStateRestore,
     bingoStateError,
+    setLocalStateString,
   }
 }
