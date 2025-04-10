@@ -30,6 +30,7 @@ const BingoRoomContext = createContext<{
   roomId: RoomId | null
   room: Room | null
   passcode: string | null
+  error: string | null
   joinRoom: (passcode: string) => void
   createRoom: () => Promise<void>
   updateRoom: (cardNum: 1 | 2, serializedState: string | null) => Promise<void>
@@ -37,6 +38,7 @@ const BingoRoomContext = createContext<{
   roomId: null,
   room: null,
   passcode: null,
+  error: null,
   joinRoom: async () => {},
   createRoom: async () => {},
   updateRoom: async () => {},
@@ -84,7 +86,7 @@ const BingoRoomProvider = ({
   }, [])
 
   const updateRoom = useCallback(
-    async (cardNum: 1 | 2, serializedState: string) => {
+    async (cardNum: 1 | 2, serializedState: string | null) => {
       if (room) {
         if (cardNum === 1) {
           await updateRoomOperation(room.roomId, {
@@ -106,7 +108,15 @@ const BingoRoomProvider = ({
 
   return (
     <BingoRoomContext.Provider
-      value={{ roomId, room, passcode, joinRoom, createRoom, updateRoom }}
+      value={{
+        roomId,
+        room,
+        passcode,
+        error,
+        joinRoom,
+        createRoom,
+        updateRoom,
+      }}
     >
       {children}
     </BingoRoomContext.Provider>
