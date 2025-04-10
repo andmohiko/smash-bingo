@@ -1,3 +1,6 @@
+/**
+ * アイコンとテキストが縦に並ぶボタン
+ */
 type Props = {
   children: React.ReactNode
   onClick: () => void
@@ -6,7 +9,7 @@ type Props = {
   leftIcon?: React.ReactNode
 }
 
-export const BasicButton = ({
+export const VerticalButton = ({
   children,
   onClick,
   importance = 'primary',
@@ -28,7 +31,7 @@ export const BasicButton = ({
       } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       disabled={isDisabled}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 [writing-mode:vertical-rl] tracking-widest">
         {leftIcon && <span className="mr-2">{leftIcon}</span>}
         {children}
       </div>

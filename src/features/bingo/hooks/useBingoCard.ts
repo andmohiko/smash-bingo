@@ -3,7 +3,7 @@
  * @description ファイターの抽出、ファイターの選択、ファイターの削除、ダッシュファイターの除外、DLCファイターの除外、ビンゴカードの状態のシリアライズ、ビンゴカードの状態のデシリアライズに関するロジックを管理するカスタムフック
  */
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useFighters } from './useFighters'
 import { useSerializeBingoState } from './useSerializeBingoState'
@@ -12,6 +12,7 @@ import type { BingoState } from '~/features/bingo/types/bingo'
 import type { Fighter, FightersData } from '~/features/bingo/types/fighter'
 
 import { getRandomElements, shuffleArray } from '~/features/bingo/utils'
+import { useBingoRoomContext } from '~/providers/BingoRoomProvider'
 
 /**
  * ビンゴカードの状態を管理するカスタムフック
@@ -23,9 +24,14 @@ import { getRandomElements, shuffleArray } from '~/features/bingo/utils'
  * - DLCファイターの除外
  * - ビンゴカードの状態のシリアライズ
  * - ビンゴカードの状態のデシリアライズ
+ * @param initialStateString - ビンゴカードの状態をシリアライズした文字列
+ * @param onChange - ビンゴカードの状態が変更されたときにDBに新たな状態を保存するためのコールバック関数
  * @returns ビンゴカードの状態に関する状態と関数
  */
-export const useBingoCard = () => {
+export const useBingoCard = (
+  cardNumber: 1 | 2,
+  onChange: (serializedState: string) => void,
+) => {
   // 状態管理
   // - ビンゴカードに配置されたファイターとそのアクティブ状態
   // - 必ず含めるファイター・除外するファイター
@@ -35,8 +41,22 @@ export const useBingoCard = () => {
     isLoading: isLoadingFighters,
     error: errorFighters,
   } = useFighters()
-  const { stateString, setStateString, serializeState, deserializeState } =
-    useSerializeBingoState()
+  const { room } = useBingoRoomContext()
+  const remoteStateString = useMemo(() => {
+    if (!room) return null
+    if (cardNumber === 1) {
+      return room.card1State
+    } else if (cardNumber === 2) {
+      return room.card2State
+    }
+    return null
+  }, [room, cardNumber])
+  const {
+    localStateString,
+    setLocalStateString,
+    serializeState,
+    deserializeState,
+  } = useSerializeBingoState()
   const [selectedFighters, setSelectedFighters] = useState<Array<Fighter>>([])
   const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
   const [mustIncludeFighters, setMustIncludeFighters] = useState<
@@ -49,6 +69,64 @@ export const useBingoCard = () => {
     useState<boolean>(false)
   const [currentState, setCurrentState] = useState<BingoState | null>(null)
   const [bingoStateError, setBingoStateError] = useState<string | null>(null)
+  const [isExternalUpdate, setIsExternalUpdate] = useState<boolean>(false)
+
+  // DBからの更新時にビンゴカードに反映する
+  useEffect(() => {
+    if (!remoteStateString || !fighters) {
+      return
+    }
+
+    try {
+      setIsExternalUpdate(true)
+      const restoredState = deserializeState(remoteStateString, fighters)
+      setSelectedFighters(restoredState.selectedFighters)
+      setMustIncludeFighters(restoredState.mustIncludeFighters)
+      setExcludeFighters(restoredState.excludeFighters)
+      setIsExcludeDashFighters(restoredState.isExcludeDashFighters)
+      setIsExcludeDlcFighters(restoredState.isExcludeDlcFighters)
+      setActiveFighters(restoredState.activeFighters)
+      setCurrentState(restoredState)
+      setBingoStateError(null)
+    } catch (error) {
+      setBingoStateError('状態の復元に失敗しました')
+    }
+  }, [remoteStateString, fighters, deserializeState, serializeState])
+
+  // こちから状態を変更した際にonChangeに変更を伝える
+  useEffect(() => {
+    // 初期状態の読み込み時は発火させない
+    if (!currentState) return
+
+    const serializedString = serializeState({
+      selectedFighters,
+      mustIncludeFighters,
+      excludeFighters,
+      isExcludeDashFighters,
+      isExcludeDlcFighters,
+      activeFighters,
+    })
+
+    // DBからの変更により、ローカルの状態とDBの状態が合わないならDBの状態を更新する
+    if (isExternalUpdate) {
+      setIsExternalUpdate(false)
+      return
+    }
+
+    if (serializedString !== remoteStateString) {
+      onChange(serializedString)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentState,
+    serializeState,
+    selectedFighters,
+    mustIncludeFighters,
+    excludeFighters,
+    isExcludeDashFighters,
+    isExcludeDlcFighters,
+    activeFighters,
+  ])
 
   /**
    * ランダムに25個のファイターを抽出する
@@ -208,7 +286,6 @@ export const useBingoCard = () => {
     }
     // 現在の状態をシリアライズ
     const serializedString = serializeState(state)
-    setStateString(serializedString)
     setCurrentState(state)
     return serializedString
   }
@@ -217,11 +294,11 @@ export const useBingoCard = () => {
    * ビンゴカードの状態を復元する
    */
   const onStateRestore = () => {
-    if (!stateString || !fighters) return
+    if (!localStateString || !fighters) return
 
     try {
       // 状態を復元
-      const restoredState = deserializeState(stateString, fighters)
+      const restoredState = deserializeState(localStateString, fighters)
 
       // 各状態を更新
       setSelectedFighters(restoredState.selectedFighters)
@@ -253,9 +330,10 @@ export const useBingoCard = () => {
     excludeFighters,
     isExcludeDashFighters,
     isExcludeDlcFighters,
-    stateString,
+    remoteStateString,
     activeFighters,
     currentState,
+    localStateString,
     extractFighters,
     addFighter,
     removeFighter,
@@ -264,7 +342,7 @@ export const useBingoCard = () => {
     handleFighterClick,
     onSerializeState,
     onStateRestore,
-    setStateString,
     bingoStateError,
+    setLocalStateString,
   }
 }
