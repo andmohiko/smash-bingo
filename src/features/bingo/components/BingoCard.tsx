@@ -8,12 +8,23 @@ import { useState } from 'react'
 import { BingoCardDisplay } from './BingoCardDisplay'
 import { BingoSettingsModal } from './BingoCardForm'
 import { BingoStateManager } from './BingoStateManager'
-import { ConfirmModal } from './ConfirmModal'
 
 import { BasicButton } from '~/components/Buttons/BasicButton'
+import { DeleteIconButton } from '~/components/Buttons/DeleteButton'
+import { ConfirmModal } from '~/components/Modals/ConfirmModal'
 import { useBingoCard } from '~/features/bingo/hooks/useBingoCard'
 
-export const BingoCard = (): React.ReactNode => {
+type Props = {
+  cardNumber: 1 | 2
+  onChange: (serializedState: string) => void
+  handleRemoveCardClick?: () => void
+}
+
+export const BingoCard = ({
+  cardNumber,
+  onChange,
+  handleRemoveCardClick,
+}: Props) => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const {
@@ -26,18 +37,18 @@ export const BingoCard = (): React.ReactNode => {
     isExcludeDashFighters,
     isExcludeDlcFighters,
     activeFighters,
-    stateString,
+    localStateString,
     extractFighters,
     addFighter,
     removeFighter,
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
     handleFighterClick,
-    setStateString,
     onSerializeState,
     onStateRestore,
+    setLocalStateString,
     bingoStateError,
-  } = useBingoCard()
+  } = useBingoCard(cardNumber, onChange)
 
   /**
    * 抽出ボタンのクリックハンドラー
@@ -83,6 +94,12 @@ export const BingoCard = (): React.ReactNode => {
         <BasicButton onClick={handleExtractClick}>
           ビンゴカードを生成する
         </BasicButton>
+        {handleRemoveCardClick && (
+          <DeleteIconButton
+            onClick={handleRemoveCardClick}
+            importance="secondary"
+          />
+        )}
       </div>
 
       <BingoCardDisplay
@@ -92,8 +109,8 @@ export const BingoCard = (): React.ReactNode => {
       />
 
       <BingoStateManager
-        stateString={stateString}
-        onChangeStateString={setStateString}
+        stateString={localStateString}
+        onChangeStateString={setLocalStateString}
         onSerializeState={onSerializeState}
         onStateRestore={onStateRestore}
         bingoStateError={bingoStateError}
