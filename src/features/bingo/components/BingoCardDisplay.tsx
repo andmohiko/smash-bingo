@@ -9,12 +9,14 @@ import type { Fighter } from '~/features/bingo/types/fighter'
 type BingoCardDisplayProps = {
   selectedFighters: Array<Fighter>
   activeFighters: Set<string>
+  usedFighters: Set<string>
   onFighterClick: (fighterId: string) => void
 }
 
 export const BingoCardDisplay: React.FC<BingoCardDisplayProps> = ({
   selectedFighters,
   activeFighters,
+  usedFighters,
   onFighterClick,
 }) => {
   // 25マスの配列を生成
@@ -35,6 +37,7 @@ export const BingoCardDisplay: React.FC<BingoCardDisplayProps> = ({
               <FighterCard
                 fighter={fighter}
                 isActive={activeFighters.has(fighter.fighterId)}
+                isUsed={usedFighters.has(fighter.fighterId)}
                 onClick={() => onFighterClick(fighter.fighterId)}
               />
             ) : (
@@ -54,22 +57,34 @@ export const BingoCardDisplay: React.FC<BingoCardDisplayProps> = ({
  * ファイターカードコンポーネント
  * @param fighter - 表示するファイターの情報
  * @param isActive - カードがアクティブかどうか
+ * @param isUsed - カードが使用済みかどうか
  * @param onClick - クリック時のコールバック関数
  */
 const FighterCard = ({
   fighter,
   isActive,
+  isUsed,
   onClick,
 }: {
   fighter: Fighter
   isActive: boolean
+  isUsed: boolean
   onClick: () => void
 }) => {
+  // 状態に応じたスタイルを決定
+  const getCardStyle = () => {
+    if (isActive) {
+      return 'bg-blue-900 text-white'
+    }
+    if (isUsed) {
+      return 'bg-gray-800 text-white opacity-40'
+    }
+    return 'bg-white hover:bg-blue-200'
+  }
+
   return (
     <div
-      className={`relative aspect-square rounded-lg shadow-md p-2 transition-all cursor-pointer ${
-        isActive ? 'bg-blue-900' : 'bg-white hover:bg-blue-200'
-      }`}
+      className={`relative aspect-square rounded-lg shadow-md p-2 transition-all cursor-pointer ${getCardStyle()}`}
       onClick={onClick}
     >
       <div className="relative w-full h-full">

@@ -59,6 +59,7 @@ export const useBingoCard = (
   } = useSerializeBingoState()
   const [selectedFighters, setSelectedFighters] = useState<Array<Fighter>>([])
   const [activeFighters, setActiveFighters] = useState<Set<string>>(new Set())
+  const [usedFighters, setUsedFighters] = useState<Set<string>>(new Set())
   const [mustIncludeFighters, setMustIncludeFighters] = useState<
     Array<Fighter>
   >([])
@@ -86,6 +87,7 @@ export const useBingoCard = (
       setIsExcludeDashFighters(restoredState.isExcludeDashFighters)
       setIsExcludeDlcFighters(restoredState.isExcludeDlcFighters)
       setActiveFighters(restoredState.activeFighters)
+      setUsedFighters(restoredState.usedFighters)
       setCurrentState(restoredState)
       setBingoStateError(null)
     } catch (error) {
@@ -105,6 +107,7 @@ export const useBingoCard = (
       isExcludeDashFighters,
       isExcludeDlcFighters,
       activeFighters,
+      usedFighters,
     })
 
     // DBからの変更により、ローカルの状態とDBの状態が合わないならDBの状態を更新する
@@ -126,6 +129,7 @@ export const useBingoCard = (
     isExcludeDashFighters,
     isExcludeDlcFighters,
     activeFighters,
+    usedFighters,
   ])
 
   /**
@@ -192,6 +196,7 @@ export const useBingoCard = (
     // シャッフルしたファイターを選択済みのファイターとして設定する
     setSelectedFighters(shuffledFighters)
     setActiveFighters(new Set()) // アクティブ状態をリセット
+    setUsedFighters(new Set()) // 使用済み状態をリセット
 
     // 現在の状態を更新
     const newState: BingoState = {
@@ -201,6 +206,7 @@ export const useBingoCard = (
       isExcludeDashFighters,
       isExcludeDlcFighters,
       activeFighters: new Set(),
+      usedFighters: new Set(),
     }
     setCurrentState(newState)
   }
@@ -247,16 +253,67 @@ export const useBingoCard = (
   }
 
   /**
+   * ファイターの現在の状態を判定する
+   * @param fighterId - 判定するファイターのID
+   * @returns ファイターの現在の状態
+   */
+  const getFighterState = (fighterId: string): 'none' | 'active' | 'used' => {
+    if (activeFighters.has(fighterId)) {
+      return 'active'
+    }
+    if (usedFighters.has(fighterId)) {
+      return 'used'
+    }
+    return 'none'
+  }
+
+  /**
+   * ファイターの次の状態を取得する
+   * @param currentState - 現在の状態
+   * @returns 次の状態
+   */
+  const getNextFighterState = (
+    currentState: 'none' | 'active' | 'used',
+  ): 'none' | 'active' | 'used' => {
+    switch (currentState) {
+      case 'none':
+        return 'active'
+      case 'active':
+        return 'used'
+      case 'used':
+        return 'none'
+      default:
+        return 'none'
+    }
+  }
+
+  /**
    * ファイターカードのクリックハンドラー
+   * 無選択→アクティブ→使用済み→無選択の循環で状態を変更する
    * @param fighterId - クリックされたファイターのID
    */
   const handleFighterClick = (fighterId: string) => {
+    const currentState = getFighterState(fighterId)
+    const nextState = getNextFighterState(currentState)
+
+    // アクティブ状態を更新
     setActiveFighters((prev) => {
       const newSet = new Set(prev)
-      if (newSet.has(fighterId)) {
-        newSet.delete(fighterId)
-      } else {
+      if (nextState === 'active') {
         newSet.add(fighterId)
+      } else {
+        newSet.delete(fighterId)
+      }
+      return newSet
+    })
+
+    // 使用済み状態を更新
+    setUsedFighters((prev) => {
+      const newSet = new Set(prev)
+      if (nextState === 'used') {
+        newSet.add(fighterId)
+      } else {
+        newSet.delete(fighterId)
       }
       return newSet
     })
@@ -264,9 +321,24 @@ export const useBingoCard = (
     // 現在の状態を更新
     setCurrentState((prev) => {
       if (!prev) return null
+      const newActiveFighters = new Set(prev.activeFighters)
+      const newUsedFighters = new Set(prev.usedFighters)
+
+      if (nextState === 'active') {
+        newActiveFighters.add(fighterId)
+        newUsedFighters.delete(fighterId)
+      } else if (nextState === 'used') {
+        newActiveFighters.delete(fighterId)
+        newUsedFighters.add(fighterId)
+      } else {
+        newActiveFighters.delete(fighterId)
+        newUsedFighters.delete(fighterId)
+      }
+
       return {
         ...prev,
-        activeFighters: new Set([...prev.activeFighters, fighterId]),
+        activeFighters: newActiveFighters,
+        usedFighters: newUsedFighters,
       }
     })
   }
@@ -283,6 +355,7 @@ export const useBingoCard = (
       isExcludeDashFighters,
       isExcludeDlcFighters,
       activeFighters,
+      usedFighters,
     }
     // 現在の状態をシリアライズ
     const serializedString = serializeState(state)
@@ -312,6 +385,9 @@ export const useBingoCard = (
       // アクティブな状態を更新
       setActiveFighters(restoredState.activeFighters)
 
+      // 使用済み状態を更新
+      setUsedFighters(restoredState.usedFighters)
+
       // 現在の状態を更新
       setCurrentState(restoredState)
       setBingoStateError(null)
@@ -332,6 +408,7 @@ export const useBingoCard = (
     isExcludeDlcFighters,
     remoteStateString,
     activeFighters,
+    usedFighters,
     currentState,
     localStateString,
     extractFighters,
@@ -340,6 +417,7 @@ export const useBingoCard = (
     toggleDashFighterExclusion,
     toggleDlcFighterExclusion,
     handleFighterClick,
+    getFighterState,
     onSerializeState,
     onStateRestore,
     bingoStateError,

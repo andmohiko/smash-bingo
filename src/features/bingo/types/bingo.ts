@@ -16,6 +16,8 @@ export type SerializedBingoState = {
   l: boolean
   /** アクティブなファイターのID配列 */
   a: Array<string>
+  /** 使用済みファイターのID配列 */
+  u: Array<string>
 }
 
 /**
@@ -28,4 +30,5 @@ export type BingoState = {
   isExcludeDashFighters: boolean
   isExcludeDlcFighters: boolean
   activeFighters: Set<string>
+  usedFighters: Set<string>
 }
