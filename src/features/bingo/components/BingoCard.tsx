@@ -37,6 +37,7 @@ export const BingoCard = ({
     isExcludeDashFighters,
     isExcludeDlcFighters,
     activeFighters,
+    usedFighters,
     localStateString,
     extractFighters,
     addFighter,
@@ -105,6 +106,7 @@ export const BingoCard = ({
       <BingoCardDisplay
         selectedFighters={selectedFighters}
         activeFighters={activeFighters}
+        usedFighters={usedFighters}
         onFighterClick={handleFighterClick}
       />
 

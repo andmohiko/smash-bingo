@@ -21,6 +21,7 @@ export const useSerializeBingoState = () => {
       d: currentState.isExcludeDashFighters,
       l: currentState.isExcludeDlcFighters,
       a: Array.from(currentState.activeFighters),
+      u: Array.from(currentState.usedFighters),
     }
     const serialized = btoa(JSON.stringify(state))
     setLocalStateString(serialized)
@@ -52,6 +53,7 @@ export const useSerializeBingoState = () => {
           isExcludeDashFighters: state.d,
           isExcludeDlcFighters: state.l,
           activeFighters: new Set(state.a),
+          usedFighters: new Set(state.u || []),
         }
       } catch (error) {
         console.error('状態の復元に失敗しました:', error)
